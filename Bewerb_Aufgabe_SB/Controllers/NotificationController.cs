@@ -1,15 +1,12 @@
-﻿/*using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace Bewerb_Aufgabe_SB.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class NotificationController : Controller
+    public class NotificationController : ControllerBase
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
+        
     }
 
     public class StatusCodeController : ControllerBase
@@ -22,4 +19,4 @@ namespace Bewerb_Aufgabe_SB.Controllers
             return Ok(DBCommands.Checkstatus(id));
         }
     }
-}*/
+}

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+/*using Microsoft.AspNetCore.Mvc;
 
 namespace Bewerb_Aufgabe_SB.Controllers
 {
@@ -65,4 +65,4 @@ namespace Bewerb_Aufgabe_SB.Controllers
             return Ok(DBCommands.Checkstatus(id));
         }
     }
-}
+}*/
