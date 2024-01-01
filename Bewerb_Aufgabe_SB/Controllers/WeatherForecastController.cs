@@ -11,12 +11,8 @@ namespace Bewerb_Aufgabe_SB.Controllers
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-        private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
+
 
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
@@ -30,6 +26,7 @@ namespace Bewerb_Aufgabe_SB.Controllers
             .ToArray();
         }
 
+        
 
         [HttpPost("{id}", Name = "GetLocationDetails")]
 
@@ -54,6 +51,18 @@ namespace Bewerb_Aufgabe_SB.Controllers
             public string? City { get; set; }
             public string? State { get; set; }
             public string? ZipCode { get; set; }
+        }
+
+
+    }
+    public class StatusCodeController : ControllerBase
+    {
+        [HttpPost("{id}", Name = "GetStatusByID")]
+
+        public IActionResult GetStatusByID(int id)
+        {
+
+            return Ok(DBCommands.Checkstatus(id));
         }
     }
 }
