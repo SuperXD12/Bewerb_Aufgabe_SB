@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
+using System.Text.Json;
 
 namespace Bewerb_Aufgabe_SB.Controllers
 {
@@ -17,8 +18,6 @@ namespace Bewerb_Aufgabe_SB.Controllers
 
         public IActionResult CreateNotification(string content, string title, string receiver, string sender)
         {
-            //TODO CHECK STATUSCODES
-
 
             using (var connection = new SqliteConnection("Data Source=sqlitedatabase_sb_bew.db"))
             {
@@ -38,11 +37,11 @@ namespace Bewerb_Aufgabe_SB.Controllers
                 int exe = command.ExecuteNonQuery();
                 if (exe <= 0)
                 {
-                    return BadRequest("Something went wrong while creating the message");
+                    return BadRequest(new Resultmessage("Something went wrong while creating the message"));
                 }
                 else
                 {
-                    return Ok("Message to " + receiver + " was successfully created");
+                    return Ok(new Resultmessage("Message to " + receiver + " was successfully created"));
                 }
 
 
@@ -70,11 +69,11 @@ namespace Bewerb_Aufgabe_SB.Controllers
                 int exe = command.ExecuteNonQuery();
                 if (exe <= 0)
                 {
-                    return NotFound("The given ID could not be found");
+                    return NotFound(new Resultmessage("The given ID could not be found"));
                 }
                 else
                 {
-                    return Ok("Message with the index " + id + " was successfully deleted");
+                    return Ok(new Resultmessage("Message with the index " + id + " was successfully deleted"));
                 }
 
 
@@ -116,7 +115,7 @@ namespace Bewerb_Aufgabe_SB.Controllers
                     }
                     else
                     {
-                        return NotFound("The given ID could not be found");
+                        return NotFound(new Resultmessage("The given ID could not be found"));
                     }
 
                 }
@@ -124,7 +123,7 @@ namespace Bewerb_Aufgabe_SB.Controllers
             }
             if (currentStatus != Statuscode.New)
             {
-                return Conflict("The message can not be canceled due to the status " + currentStatus);
+                return Conflict(new Resultmessage("The message can not be canceled due to the status " + currentStatus));
             }
 
             using (var connection = new SqliteConnection("Data Source=sqlitedatabase_sb_bew.db"))
@@ -141,11 +140,11 @@ namespace Bewerb_Aufgabe_SB.Controllers
                 int exe = command.ExecuteNonQuery();
                 if (exe <= 0)
                 {
-                    return BadRequest("Something went wrong while deleting the message");
+                    return BadRequest(new Resultmessage("Something went wrong while deleting the message"));
                 }
                 else
                 {
-                    return Ok("Message with the index " + id + " was successfully deleted");
+                    return Ok(new Resultmessage("Message with the index " + id + " was successfully deleted"));
                 }
 
 
@@ -193,14 +192,14 @@ namespace Bewerb_Aufgabe_SB.Controllers
                     else
                     {
 
-                        return NotFound("The given ID could not be found");
+                        return NotFound(new Resultmessage("The given ID could not be found"));
                     }
 
                 }
 
             }
             if (currentStatus != Statuscode.New) { 
-                return Conflict("The message can not be send due to the status " + currentStatus);
+                return Conflict(new Resultmessage("The message can not be send due to the status " + currentStatus));
             }
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
@@ -215,7 +214,7 @@ namespace Bewerb_Aufgabe_SB.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex);
-                return BadRequest(ex.Message);
+                return BadRequest(new Resultmessage(ex.Message));
 
             }
 
@@ -238,7 +237,7 @@ namespace Bewerb_Aufgabe_SB.Controllers
 
 
 
-            return Ok("Message was successfully send");
+            return Ok(new Resultmessage("Message was successfully send"));
 
         }
 
@@ -261,20 +260,23 @@ namespace Bewerb_Aufgabe_SB.Controllers
                 command.Parameters.AddWithValue("$sender", sender);
                 using (var reader = command.ExecuteReader())
                 {
-                    string result = "";
+                    
                     if (reader.HasRows)
                     {
+                        List<Notification> messagesbyperson = new List<Notification>();
                         while (reader.Read())
                         {
-                            result= result + reader.GetString(0) + " " + reader.GetString(1) + " " + reader.GetString(4) + "->" + reader.GetString(3) + " " + reader.GetString(5) +" | ";
+                            Person temp_receiver = new Person(reader.GetString(3));
+                            Person temp_sender = new Person(reader.GetString(4));
 
-                            //TODO to json
+                            messagesbyperson.Add(new Notification(Int32.Parse(reader.GetString(0)), reader.GetString(1), reader.GetString(2), temp_receiver, temp_sender, (Statuscode)Int16.Parse(reader.GetString(5))));
+
                         }
-                        return Ok(result);
+                        return Ok(messagesbyperson);
                     }
                     else
                     {
-                        return NotFound("The given ID could not be found");
+                        return NotFound(new Resultmessage("The given ID could not be found"));
                     }
 
                 }
@@ -285,79 +287,6 @@ namespace Bewerb_Aufgabe_SB.Controllers
 
 
 
-
-
-        /*public static int GetPersonByName(string address) {
-
-
-            using (var connection = new SqliteConnection("Data Source=sqlitedatabase_sb_bew.db"))
-            {
-                connection.Open();
-
-                var command = connection.CreateCommand();
-                command.CommandText =
-                            @"
-                SELECT ID
-                FROM Persons
-                WHERE Mailaddress = $address
-                    ";
-                command.Parameters.AddWithValue("$address", address);
-
-                using (var reader = command.ExecuteReader())
-                {
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                           return Int32.Parse(reader.GetString(0));
-
-                        }
-
-                    }
-                    return -1;
-
-
-                }
-
-                }
-            }
-
-            public static string GetPersonByID(int id)
-            {
-
-
-                using (var connection = new SqliteConnection("Data Source=sqlitedatabase_sb_bew.db"))
-                {
-                    connection.Open();
-
-                    var command = connection.CreateCommand();
-                    command.CommandText =
-                                @"
-                SELECT Mailaddress
-                FROM Persons
-                WHERE ID = $id
-                    ";
-                    command.Parameters.AddWithValue("$id", id);
-
-                    using (var reader = command.ExecuteReader())
-                    {
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                return reader.GetString(0);
-
-                            }
-
-                        }
-                        return 
-
-
-                    }
-
-                }
-            }
-        */
 
 
     }
@@ -395,10 +324,11 @@ namespace Bewerb_Aufgabe_SB.Controllers
                             //else automatically sending error status | this should be prevented by only correctly altering statuscodes 
                             
                         }
-                        return Ok(currentStatus.ToString());
+                        return Ok(currentStatus);
                     }
                     else {
-                        return NotFound("The given ID could not be found");
+
+                        return NotFound(new Resultmessage("The given ID could not be found"));
                     }
                        
                 }
